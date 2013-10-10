@@ -7,8 +7,8 @@ class PostcodeLookup extends AppModel {
 	const POST_CODE_REGEX = '/[A-Z]{1,2}[0-9]{1,2}\s?[0-9]{1,2}[A-Z]{1,2}/i';
 
 	public $actsAs = array(
-		'Enum.Enum' => array(
-			'country' => array('England', 'Scotland', 'Wales', 'Northern Ireland')
+		'EnumBehavior.Enum' => array(
+			'country' => array('England', 'Scotland', 'Wales', 'Northern Ireland', 'UK')
 		)
 	);
 
@@ -64,25 +64,24 @@ class PostcodeLookup extends AppModel {
  * @return Array Array to be used in an App::save()
  */
 	public function tidyData($data) {
-		$origData = $data;
 		$data = array_filter($data, array($this, 'removeEmptyLines'));
-		$origData2 = $data;
 		$pc = array_pop($data);
 		$pc = PostcodeLookup::formatPostcode($pc);
-		$l7 = array_pop($data);
+		$l7 = trim(array_pop($data));
 // If the last Line of the Address is a Country then assign to the Country Field and get the next last line
-		$country = in_array($l7, $this->enumValues('county'));
+		$country = $this->countryId($l7);
 		if($country === false) {
-			$l7 = array_pop($data);
 			$country = null;
+		} else {
+			$l7 = trim(array_pop($data));
 		}
-			
-		$l1 = array_shift($data);
-		$l2 = array_shift($data);
-		$l3 = array_shift($data);
-		$l4 = array_shift($data);
-		$l5 = array_shift($data);
-		$l6 = array_shift($data);
+
+		$l1 = trim(array_shift($data));
+		$l2 = trim(array_shift($data));
+		$l3 = trim(array_shift($data));
+		$l4 = trim(array_shift($data));
+		$l5 = trim(array_shift($data));
+		$l6 = trim(array_shift($data));
 
 		return array('PostcodeLookup' => array(
 			'line_1' => $l1,
@@ -95,5 +94,27 @@ class PostcodeLookup extends AppModel {
 			'postcode' => $pc,
 			'country' => $country
 		));
+	}
+
+	private static $upperCaseCountries = false;
+	public function getUpperCaseCountries() {
+		if(self::$upperCaseCountries)
+			return self::$upperCaseCountries;
+		$countries = $this->enumValues('country');
+		foreach($countries As $k => $v) {
+			$countries[$k] = strtoupper($v);
+		}
+		return self::$upperCaseCountries = $countries;
+	}
+	private function countryId($name) {
+		$name = trim(strtoupper($name));
+		switch($name) {
+			case 'N.IRELAND':
+				$name = 'NORTHERN IRELAND';
+				break;
+			default;
+				break;
+		}
+		return array_search($name, $this->getUpperCaseCountries());
 	}
 }
