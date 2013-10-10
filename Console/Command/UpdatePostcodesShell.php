@@ -24,7 +24,12 @@ class UpdatePostcodesShell extends AppShell {
 			$this->PostcodeLookup->deleteAll(true);
 		}
 // Open File Handle
-		$fh = fopen(self::$openDbDownload, 'r');
+		$fh = @fopen(self::$openDbDownload, 'r');
+		if(!$fh) {
+			$this->err(__('Unable to open file (%s)', array(self::$openDbDownload)));
+			return;
+		}
+
 		$saveData = array();
 // Initailize Counters
 		$failed = $imported = $newAddress = 0;
@@ -73,7 +78,11 @@ class UpdatePostcodesShell extends AppShell {
 		))->
 		description(array(
 			'Update the Postcode Lookup Table',
-			vsprintf('This will update the table based on any new Postcodes that have been submitted to "%s"', array(UpdatePostcodesShell::$openDbDownload))
+			vsprintf('This will update the table based on any new Postcodes that have been submitted to "%s"', array(self::$openDbDownload)),
+			'Output will vary depending on the options passed in:',
+			vsprintf(' <info>-q</info> Will hide all validation errors, only an error will display if unable to access "%s"',array(self::$openDbDownload)),
+			' <info>-v</info> Will out put the data trying to be saved as well as the validation failures, as well as a summary of the Import',
+			' neither <info>-q</info> or <info>-v</info> Will out put the Postcode of the address that failed with the validation failure as well as a summary of the import'
 		));
 		return $parser;
 	}
