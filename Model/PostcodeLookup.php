@@ -1,9 +1,17 @@
 <?php
-
+/**
+ * Postcode Lookup
+ * 
+ * @author Lee Bradley <bradley.lee80@googlemail.com>
+ * 
+ * @method Array findByPostcode(String $postcode, Array, $opts) Find an Address by Postcode
+ */
 class PostcodeLookup extends AppModel {
 
 	public $primaryKey = 'postcode';
-
+/**
+ * @var String Regex to match postcodes
+ */
 	const POST_CODE_REGEX = '/[A-Z]{1,2}[0-9]{1,2}\s?[0-9]{1,2}[A-Z]{1,2}/i';
 
 	public $actsAs = array(
@@ -12,6 +20,11 @@ class PostcodeLookup extends AppModel {
 		)
 	);
 
+/**
+ * Validate
+ * 
+ * @var Array Field Validation Rules
+ */
 	public $validate = array(
 		'line_1' => array(
 			'notempty' => array(
@@ -33,8 +46,8 @@ class PostcodeLookup extends AppModel {
 				'rule' => array('notempty')
 			),
 			'postal' => array(
+// Slight adjustment to builtin regex for UK Postcodes to not require a space in the middle
 				'rule' => array('postal', '/\\A\\b[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][ABD-HJLNP-UW-Z]{2}\\b\\z/i', 'uk')
-//				'rule' => array('postal', null, 'uk')
 			)
 		),
 		'country' => array(
@@ -44,7 +57,12 @@ class PostcodeLookup extends AppModel {
 			)
 		)
 	);
-/***/
+/**
+ * Formats the postcode by removing any invalid characters and and whitespace, and changing to uppercase
+ *
+ * @param String $postcode Postcode to format
+ * @return String Formatted Postcode
+ */
 	public static function formatPostcode($postcode) {
 		return trim(preg_replace('/[^A-Z0-9\s]/', '', strtoupper($postcode)));
 	}
@@ -95,6 +113,7 @@ class PostcodeLookup extends AppModel {
 			'country' => $country
 		));
 	}
+
 
 	private static $upperCaseCountries = false;
 	public function getUpperCaseCountries() {
